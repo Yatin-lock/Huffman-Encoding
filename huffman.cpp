@@ -48,7 +48,7 @@ bool cmp(huffmanTreeComponent *a, huffmanTreeComponent *b){
 	return a->prob>b->prob;
 }
 
-class huffmanUtils
+class huffmanCodingUtils
 {
 	int **image;
 	int height, breadth,nodes;
@@ -57,12 +57,17 @@ public:
 	vector<huffmanTreeComponent*> arr;
 	huffmanTreeComponent *root;
 	int pixelIntensityMap[256];
-	huffmanUtils(){
+	huffmanCodingUtils(){
 		for(int i=0;i<256;i++)pixelIntensityMap[i]=0;
 		nodes=0;
 		for(int i=0;i<256;i++)codeMap[i]="";
 	}
-
+	int getHeight(){
+		return height;
+	}
+	int getBreadth(){
+		return breadth;
+	}
 	void readImage(char fileName[])
 	{
 		int i, j;
@@ -200,10 +205,57 @@ public:
 	}
 };
 
+class huffmanDecodingUtils{
+	huffmanTreeComponent *root;
+	int **image;
+	int height,breadth;
+public:
+	void getDimensions(huffmanCodingUtils cUtil){
+		height = cUtil.getHeight();
+		breadth = cUtil.getBreadth();
+	}	
+	void initializeImage(){
+		image = new int*[height];
+		for(int i=0;i<height;i++){
+			image[i] = new int[breadth];
+		}
+	}
+	void decodeImage(huffmanTreeComponent *root){
+		int track=0;
+		ifstream encodedImage("encoded_image.txt");
+		if(!encodedImage.is_open()){
+			cout<<"Couldn't open the file-"
+				<<"encoded_image.txt"<<endl;
+		}
+		else{
+			char c;
+			int i=0,j=0;
+			while(encodedImage.get(c)){
+				if(c=='0'){
+					root=root->left;
+					if(root&&root->isLeaf){
+						image[i][j]=root->pixel;
+						i = i+(j+1)/breadth;
+						j = (j+1)%breadth;
+					}
+				}
+				else{
+					root=root->right;
+					if(root&&root->isLeaf){
+						image[i][j]=root->pixel;
+						i = i+(j+1)/breadth;
+						j = (j+1)%breadth;
+					}	
+				}
+			}
+		}
+
+	}
+};
 int main()
 {
 	//reading image file
-	huffmanUtils util;
+	huffmanCodingUtils util;
 	char fileName[]="Input_Image.bmp";
 	util.readImage(fileName);
 	//creating map for pixel intensities
