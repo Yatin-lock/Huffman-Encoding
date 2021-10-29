@@ -185,12 +185,18 @@ public:
 	void encodeImage(){
 		ofstream out("encoded_image.txt");
 		for(int i=0;i<height;i++){
-			for(int j=0;j<breadth;i++){
+			for(int j=0;j<breadth;j++){
 				out<<codeMap[image[i][j]];
 			}
 		}
 		out.close();
 		cout<<"Successfully encoded Image\n";
+	}
+	void displayCodes(){
+		for(int i=0;i<256;i++){
+			if(codeMap[i].size()>0)
+				cout<<i<<": "<<codeMap[i]<<"\n";
+		}
 	}
 };
 
@@ -210,6 +216,7 @@ int main()
 	huffmanTreeComponent *root =  util.createTree();
 	util.assignCodeToTreeNodes(root,"");
 	util.addInCodeMap(root);
+	util.displayCodes();
 	util.encodeImage();
 	return 0;
 }
