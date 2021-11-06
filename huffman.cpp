@@ -16,33 +16,7 @@ public:
 	}
 };
 
-class huffmanTree{
-public:
-	huffmanTreeComponent *root;
-	huffmanTree(huffmanTreeComponent *root){
-		this->root = root;
-	}
-	void levelOrder(){
-		deque<huffmanTreeComponent*>q;
-		if(root){
-			q.push_back(root);
-		}
-		while(!q.empty()){
-			if(q.front()->isLeaf){
-				cout<<q.front()->pixel<<" ";
-			}else{
-				cout<<"parent node "; 
-			}
-			if(q.front()->left){
-				q.push_back(q.front()->left);
-			}
-			if(q.front()->right){
-				q.push_back(q.front()->right);
-			}
-			q.pop_front();
-		}
-	}
-};
+vector <string> split (const string &s, char delimiter);
 
 bool cmp(huffmanTreeComponent *a, huffmanTreeComponent *b){
 	return a->prob>b->prob;
@@ -113,6 +87,27 @@ public:
 		}
 	}
 
+	void useSampleFormatForIllustration(){
+		ifstream sample("sampleImageInTxtFormat.txt");
+		if(!sample.is_open()){
+			cout<<"Error reading sample pixels\n";
+			return;
+		}
+		height=8;
+		breadth=8;
+		image = new int*[8];
+		for(int i=0;i<8;i++){
+			image[i] = new int[8];
+		}
+		int i=0;
+		for(string line;getline(sample,line);){
+			vector<string> vals=split(line,';');
+			for(int j=0;j<8;j++){
+				image[i][j]=stoi(vals[j]);
+			}
+			i++;
+		}
+	}
 	int *getMapPixel()
 	{
 		for (int i = 0; i < height; i++)
@@ -213,54 +208,68 @@ public:
 	void getDimensions(huffmanCodingUtils cUtil){
 		height = cUtil.getHeight();
 		breadth = cUtil.getBreadth();
+		cout<<"Got dimensions successfully\n";
 	}	
 	void initializeImage(){
 		image = new int*[height];
 		for(int i=0;i<height;i++){
 			image[i] = new int[breadth];
 		}
+		cout<<"initialized image successfully\n";
 	}
 	void decodeImage(huffmanTreeComponent *root){
 		int track=0;
 		ifstream encodedImage("encoded_image.txt");
 		if(!encodedImage.is_open()){
 			cout<<"Couldn't open the file-"
-				<<"encoded_image.txt"<<endl;
+				<<"encoded_image.txt"<<"\n";
 		}
 		else{
+			cout<<"Decoding image data\n";
 			char c;
 			int i=0,j=0;
+			huffmanTreeComponent*temp=root;
 			while(encodedImage.get(c)){
 				if(c=='0'){
-					root=root->left;
-					if(root&&root->isLeaf){
-						image[i][j]=root->pixel;
+					temp=temp->left;
+					if(temp&&temp->isLeaf){
+						image[i][j]=temp->pixel;
 						i = i+(j+1)/breadth;
 						j = (j+1)%breadth;
+						temp=root;
 					}
 				}
 				else{
-					root=root->right;
-					if(root&&root->isLeaf){
-						image[i][j]=root->pixel;
+					temp=temp->right;
+					if(temp&&temp->isLeaf){
+						image[i][j]=temp->pixel;
 						i = i+(j+1)/breadth;
 						j = (j+1)%breadth;
+						temp=root;
 					}	
 				}
 			}
 		}
-
+	}
+	void displayImagePixels(){
+		for(int i=0;i<height;i++){
+			for(int j=0;j<breadth;j++){
+				cout<<image[i][j]<<" ";
+			}
+			cout<<"\n";
+		}
 	}
 };
 int main()
 {
 	//reading image file
 	huffmanCodingUtils util;
-	char fileName[]="Input_Image.bmp";
-	util.readImage(fileName);
-	//creating map for pixel intensities
+	util.useSampleFormatForIllustration();
+	// char fileName[]="Input_Image.bmp";
+	// util.readImage(fileName);
+	// //creating map for pixel intensities
 	int *map = util.getMapPixel();
-	// for(int i=0;i<256;i++)cout<<i<<" "<<map[i]<<endl;
+	// for(int i=0;i<256;i++)cout<<i<<" "<<map[i]<<"\n";
 	//initialising nodes and the array
 	util.intializeNodes();
 	util.initializeArr();
@@ -270,5 +279,24 @@ int main()
 	util.addInCodeMap(root);
 	util.displayCodes();
 	util.encodeImage();
+	huffmanDecodingUtils deutil;
+	deutil.getDimensions(util);
+	deutil.initializeImage();
+	deutil.decodeImage(root);
+	deutil.displayImagePixels();
 	return 0;
+}
+
+vector <string> split (const string &s, char delimiter)
+{
+    vector <string> tokens ;
+    string token ;
+    istringstream tokenStream (s) ;
+
+    while (getline (tokenStream , token , delimiter) )
+    {
+        tokens.push_back (token);
+    }
+
+    return tokens ;
 }
