@@ -1,47 +1,98 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-class huffmanTreeComponent{
+//single huffman node component
+class huffmanTreeComponent
+{
 public:
-	int pixel;
+	//pixel represents the pixel intensity of that pixel.
+	int pixel; 
+
+	// probability of that pixel intensity in the image
 	float prob;
+
+	//represents if that pixel is a leaf or not.
 	bool isLeaf;
+
+	//huffman code of that node
 	string code;
-	huffmanTreeComponent *left,*right;
-	huffmanTreeComponent(int pixel){
+
+	//left and right components of that tree.
+	huffmanTreeComponent *left, *right;
+
+	// parameterized constructor
+	// it sets the pixel value and by default that node is a leaf.
+	huffmanTreeComponent(int pixel)
+	{
 		this->pixel = pixel;
-		left=nullptr;
-		right=nullptr;
-		isLeaf=true;
+		left = nullptr;
+		right = nullptr;
+		isLeaf = true;
 	}
 };
 
-vector <string> split (const string &s, char delimiter);
-
-bool cmp(huffmanTreeComponent *a, huffmanTreeComponent *b){
-	return a->prob>b->prob;
+//comparsion function for sorting nodes.
+//It compares according to pixel probability.
+bool cmp(huffmanTreeComponent *a, huffmanTreeComponent *b)
+{
+	return a->prob > b->prob;
 }
 
+// utlity functions for encoding the image.
 class huffmanCodingUtils
 {
+	// represents the pixel intensity graph of an image.
+	// It is stored in a 2D array.
 	int **image;
-	int height, breadth,nodes;
+
+	//height - height of image
+	//breadth - breadth of image
+	//nodes - total nodes available.
+	int height, breadth, nodes;
+
+	//stores the huffmanCodes of all pixel intensities.
 	string codeMap[256];
+
+	//stores size of encoded image
+	long long encodedSize;
 public:
-	vector<huffmanTreeComponent*> arr;
+
+	// array that stores all pixel intensity nodes
+	vector<huffmanTreeComponent *> arr;
+
+	//defines the master root of the tree.
 	huffmanTreeComponent *root;
+
+	//stores the pixel intensities of each pixel.
 	int pixelIntensityMap[256];
-	huffmanCodingUtils(){
-		for(int i=0;i<256;i++)pixelIntensityMap[i]=0;
-		nodes=0;
-		for(int i=0;i<256;i++)codeMap[i]="";
+
+	//default constructor
+	huffmanCodingUtils()
+	{
+		// initializes pixel intensities to 0.
+		for (int i = 0; i < 256; i++)
+			pixelIntensityMap[i] = 0;
+		// nodes to 0
+		nodes = 0;
+		//codes to 0
+		for (int i = 0; i < 256; i++)
+			codeMap[i] = "";
+		encodedSize=0;
 	}
-	int getHeight(){
+
+	//accessor function that returns height
+	int getHeight()
+	{
 		return height;
 	}
-	int getBreadth(){
+
+	//accessor function that returns breadth
+	int getBreadth()
+	{
 		return breadth;
 	}
+
+	//function to read the image.
 	void readImage(char fileName[])
 	{
 		int i, j;
@@ -87,27 +138,8 @@ public:
 		}
 	}
 
-	void useSampleFormatForIllustration(){
-		ifstream sample("sampleImageInTxtFormat.txt");
-		if(!sample.is_open()){
-			cout<<"Error reading sample pixels\n";
-			return;
-		}
-		height=8;
-		breadth=8;
-		image = new int*[8];
-		for(int i=0;i<8;i++){
-			image[i] = new int[8];
-		}
-		int i=0;
-		for(string line;getline(sample,line);){
-			vector<string> vals=split(line,';');
-			for(int j=0;j<8;j++){
-				image[i][j]=stoi(vals[j]);
-			}
-			i++;
-		}
-	}
+	//accessor function that updates the pixelIntensity map using image pixels
+	//using  and returns the pixelIntensity map
 	int *getMapPixel()
 	{
 		for (int i = 0; i < height; i++)
@@ -120,38 +152,50 @@ public:
 		return pixelIntensityMap;
 	}
 
-	void intializeNodes(){
-		for(int i=0;i<256;i++){
-			if(pixelIntensityMap[i]!=0)
+	//initializes no. of nodes using pixelIntensityMap
+	void intializeNodes()
+	{
+		for (int i = 0; i < 256; i++)
+		{
+			if (pixelIntensityMap[i] != 0)
 				nodes++;
 		}
 	}
-	
-	void initializeArr(){
-		int totalPixels = height*breadth;
-		for(int i=0;i<256;i++){
-			if(pixelIntensityMap[i]!=0){
+
+	// adds all the non zero pixelintensities in an array.
+	void initializeArr()
+	{
+		int totalPixels = height * breadth;
+		for (int i = 0; i < 256; i++)
+		{
+			if (pixelIntensityMap[i] != 0)
+			{
 				huffmanTreeComponent *h = new huffmanTreeComponent(i);
-				float probability = (float)pixelIntensityMap[i]/totalPixels;
+				float probability = (float)pixelIntensityMap[i] / totalPixels;
 				h->prob = probability;
 				arr.push_back(h);
 			}
 		}
 	}
 
-	huffmanTreeComponent *combineNodes(huffmanTreeComponent *a, huffmanTreeComponent *b){
-		huffmanTreeComponent *newNode = new huffmanTreeComponent(a->pixel+b->pixel);
-		newNode->isLeaf=false;
-		newNode->prob = a->prob+b->prob;
+	//combines two nodes of the huffman tree.
+	huffmanTreeComponent *combineNodes(huffmanTreeComponent *a, huffmanTreeComponent *b)
+	{
+		huffmanTreeComponent *newNode = new huffmanTreeComponent(a->pixel + b->pixel);
+		newNode->isLeaf = false;
+		newNode->prob = a->prob + b->prob;
 		newNode->left = a;
 		newNode->right = b;
 		return newNode;
 	}
-	
-	huffmanTreeComponent* createTree(){
-		while(arr.size()>1){
-			sort(arr.begin(),arr.end(),cmp);
-			huffmanTreeComponent *n = combineNodes(arr[arr.size()-2],arr[arr.size()-1]);
+
+	//creates the huffman tree 
+	huffmanTreeComponent *createTree()
+	{
+		while (arr.size() > 1)
+		{
+			sort(arr.begin(), arr.end(), cmp);
+			huffmanTreeComponent *n = combineNodes(arr[arr.size() - 2], arr[arr.size() - 1]);
 			arr.pop_back();
 			arr.pop_back();
 			arr.push_back(n);
@@ -159,144 +203,269 @@ public:
 		root = arr[0];
 		return root;
 	}
-	void assignCodeToTreeNodes(huffmanTreeComponent *rootNode, string src){
-		if(root!=nullptr){
-			if(rootNode->isLeaf){
+
+	// backtracks and assigns code to tree nodes according to their positions
+	void assignCodeToTreeNodes(huffmanTreeComponent *rootNode, string src)
+	{
+		if (rootNode != nullptr)
+		{
+			if (rootNode->isLeaf)
+			{
 				rootNode->code = src;
 			}
-			else{
-				assignCodeToTreeNodes(rootNode->left,src+'0');
-				assignCodeToTreeNodes(rootNode->right,src+'1');
+			else
+			{
+				assignCodeToTreeNodes(rootNode->left, src + '0');
+				assignCodeToTreeNodes(rootNode->right, src + '1');
 			}
 		}
 	}
 
-	void addInCodeMap(huffmanTreeComponent *rootNode){
-		if(rootNode){
-			if(rootNode->isLeaf){
-				codeMap[rootNode->pixel]=rootNode->code;
+	//adding huffman codes in codeMap
+	void addInCodeMap(huffmanTreeComponent *rootNode)
+	{
+		if (rootNode)
+		{
+			if (rootNode->isLeaf)
+			{
+				codeMap[rootNode->pixel] = rootNode->code;
 			}
-			else{
+			else
+			{
 				addInCodeMap(rootNode->left);
 				addInCodeMap(rootNode->right);
 			}
 		}
 	}
-	void encodeImage(){
+
+	//encodes the final image in a txt file
+	void encodeImage()
+	{
 		ofstream out("encoded_image.txt");
-		for(int i=0;i<height;i++){
-			for(int j=0;j<breadth;j++){
-				out<<codeMap[image[i][j]];
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < breadth; j++)
+			{
+				encodedSize+=codeMap[image[i][j]].size();
+				out << codeMap[image[i][j]];
 			}
 		}
 		out.close();
-		cout<<"Successfully encoded Image\n";
+		cout << "Successfully encoded Image\n";
 	}
-	void displayCodes(){
-		for(int i=0;i<256;i++){
-			if(codeMap[i].size()>0)
-				cout<<i<<": "<<codeMap[i]<<"\n";
+
+	//utility function that displays code.
+	void displayCodes()
+	{
+		for (int i = 0; i < 256; i++)
+		{
+			if (codeMap[i].size() > 0)
+				cout << i << ": " << codeMap[i] << "\n";
+		}
+	}
+
+	void displayEncodedSize(){
+		cout<<"The encoded image has a size of "<<encodedSize<<" bits\n";
+		cout<<"While the original size is: "<<height*breadth*8<<" bits\n";
+	}
+};
+
+// utils for decoding the image.
+class huffmanDecodingUtils
+{
+	//root node of huffman tree
+	huffmanTreeComponent *root;
+	// represents the pixel intensity graph of an image.
+	// It is stored in a 2D array.
+	int **image;
+	//height- height of image
+	//breadth-breadth of image
+	int height, breadth;
+
+public:
+	//retrieves the tree height and breadth from coding utilities.
+	void getDimensions(huffmanCodingUtils cUtil)
+	{
+		height = cUtil.getHeight();
+		breadth = cUtil.getBreadth();
+		cout << "Got dimensions successfully\n";
+	}
+
+	// initializes the image with provided breadth and height.
+	void initializeImage()
+	{
+		image = new int *[height];
+		for (int i = 0; i < height; i++)
+		{
+			image[i] = new int[breadth];
+		}
+		cout << "initialized image successfully\n";
+	}
+
+	//decodes the image using the root 
+	void decodeImage(huffmanTreeComponent *root)
+	{
+		int track = 0;
+		ifstream encodedImage("encoded_image.txt");
+		if (!encodedImage.is_open())
+		{
+			cout << "Couldn't open the file-"
+				 << "encoded_image.txt"
+				 << "\n";
+		}
+		else
+		{
+			cout << "Decoding image data\n";
+			char c;
+			int i = 0, j = 0;
+			huffmanTreeComponent *temp = root;
+			while (encodedImage.get(c))
+			{
+				if (c == '0')
+				{
+					temp = temp->left;
+					if (temp && temp->isLeaf)
+					{
+						image[i][j] = temp->pixel;
+						i = i + (j + 1) / breadth;
+						j = (j + 1) % breadth;
+						temp = root;
+					}
+				}
+				else
+				{
+					temp = temp->right;
+					if (temp && temp->isLeaf)
+					{
+						image[i][j] = temp->pixel;
+						i = i + (j + 1) / breadth;
+						j = (j + 1) % breadth;
+						temp = root;
+					}
+				}
+			}
+		}
+	}
+
+	//displays the pixels of image decoded.
+	void displayImagePixels()
+	{
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < breadth; j++)
+			{
+				cout << setw(3) << image[i][j] << " ";
+			}
+			cout << "\n";
 		}
 	}
 };
 
-class huffmanDecodingUtils{
-	huffmanTreeComponent *root;
-	int **image;
-	int height,breadth;
-public:
-	void getDimensions(huffmanCodingUtils cUtil){
-		height = cUtil.getHeight();
-		breadth = cUtil.getBreadth();
-		cout<<"Got dimensions successfully\n";
-	}	
-	void initializeImage(){
-		image = new int*[height];
-		for(int i=0;i<height;i++){
-			image[i] = new int[breadth];
-		}
-		cout<<"initialized image successfully\n";
-	}
-	void decodeImage(huffmanTreeComponent *root){
-		int track=0;
-		ifstream encodedImage("encoded_image.txt");
-		if(!encodedImage.is_open()){
-			cout<<"Couldn't open the file-"
-				<<"encoded_image.txt"<<"\n";
-		}
-		else{
-			cout<<"Decoding image data\n";
-			char c;
-			int i=0,j=0;
-			huffmanTreeComponent*temp=root;
-			while(encodedImage.get(c)){
-				if(c=='0'){
-					temp=temp->left;
-					if(temp&&temp->isLeaf){
-						image[i][j]=temp->pixel;
-						i = i+(j+1)/breadth;
-						j = (j+1)%breadth;
-						temp=root;
-					}
-				}
-				else{
-					temp=temp->right;
-					if(temp&&temp->isLeaf){
-						image[i][j]=temp->pixel;
-						i = i+(j+1)/breadth;
-						j = (j+1)%breadth;
-						temp=root;
-					}	
-				}
-			}
-		}
-	}
-	void displayImagePixels(){
-		for(int i=0;i<height;i++){
-			for(int j=0;j<breadth;j++){
-				cout<<image[i][j]<<" ";
-			}
-			cout<<"\n";
-		}
-	}
+class Application{
+	huffmanCodingUtils cutil;
+	huffmanDecodingUtils deutil;
+	void renderMenu();
+	void renderInputMenu(char filename[]);
+	void renderSampleMenu();
+	void renderDefault();
+	void renderEncodeMenu();
+	void renderDecodeMenu();
+	void renderDisplayCodes();
+	public:
+	void start();
 };
+
 int main()
 {
-	//reading image file
-	huffmanCodingUtils util;
-	util.useSampleFormatForIllustration();
-	// char fileName[]="Input_Image.bmp";
-	// util.readImage(fileName);
-	// //creating map for pixel intensities
-	int *map = util.getMapPixel();
-	// for(int i=0;i<256;i++)cout<<i<<" "<<map[i]<<"\n";
-	//initialising nodes and the array
-	util.intializeNodes();
-	util.initializeArr();
-	//tree creation
-	huffmanTreeComponent *root =  util.createTree();
-	util.assignCodeToTreeNodes(root,"");
-	util.addInCodeMap(root);
-	util.displayCodes();
-	util.encodeImage();
-	huffmanDecodingUtils deutil;
-	deutil.getDimensions(util);
-	deutil.initializeImage();
-	deutil.decodeImage(root);
-	deutil.displayImagePixels();
+	Application app;
+	app.start();	
+
 	return 0;
 }
 
-vector <string> split (const string &s, char delimiter)
-{
-    vector <string> tokens ;
-    string token ;
-    istringstream tokenStream (s) ;
+void Application::start(){
+	system("cls");
+	printf("Welcome to huffman encoding and decoding menu\n");
+	system("pause");
+	renderMenu();
+}
 
-    while (getline (tokenStream , token , delimiter) )
-    {
-        tokens.push_back (token);
-    }
+void Application::renderMenu(){
+	system("cls");
+	printf("Enter your encoding preferences\n");
+	printf("1. Encode a sample image\n");
+	printf("2. Encode a default image\n");
+	int ch;
+	cin>>ch;
+	switch(ch){
+		case 1: 
+			renderSampleMenu();
+			break;
+		case 2:
+			renderDefault();
+			break;
+		default:
+			printf("Enter an appropriate choice\n");
+	}
+}
 
-    return tokens ;
+void Application::renderInputMenu(char filename[]){
+	cutil.readImage(filename);
+	int *map = cutil.getMapPixel();
+	cutil.initializeArr();
+	cutil.createTree();
+	cutil.assignCodeToTreeNodes(cutil.root,"");
+	cutil.addInCodeMap(cutil.root);
+}
+
+void Application::renderSampleMenu(){
+	system("cls");
+	printf("Enter the name of sample file you want to encode\n");
+	char filename[100];
+	cin>>filename;
+	renderInputMenu(filename);
+	printf("Press a key to encode\n");
+	system("pause");
+	renderEncodeMenu();
+	system("pause");
+	renderDisplayCodes();
+	printf("Do you want to decode this image?(y/n)\n");
+	char ch;
+	cin>>ch;
+	if(ch=='y'){
+		system("cls");
+		renderDecodeMenu();
+	}
+}
+
+
+void Application::renderDefault(){
+	system("cls");
+	char fileName[]="Input_Image.bmp";
+	renderInputMenu(fileName);
+	printf("Press a key to encode\n");
+	system("pause");
+	renderEncodeMenu();
+	system("pause");
+	renderDisplayCodes();
+}
+
+void Application::renderEncodeMenu(){
+	system("cls");
+	cutil.encodeImage();
+	cutil.displayEncodedSize();
+} 
+
+void Application::renderDisplayCodes(){
+	system("cls");
+	printf("Huffman codes for the given image\n");
+	cutil.displayCodes();
+	return;
+}
+
+void Application::renderDecodeMenu(){
+	deutil.getDimensions(cutil);
+	deutil.initializeImage();
+	deutil.decodeImage(cutil.root);
+	deutil.displayImagePixels();
 }
