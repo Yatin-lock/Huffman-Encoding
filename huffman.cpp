@@ -178,6 +178,7 @@ public:
 		}
 	}
 
+
 	//combines two nodes of the huffman tree.
 	huffmanTreeComponent *combineNodes(huffmanTreeComponent *a, huffmanTreeComponent *b)
 	{
@@ -247,7 +248,10 @@ public:
 			for (int j = 0; j < breadth; j++)
 			{
 				encodedSize+=codeMap[image[i][j]].size();
-				out << codeMap[image[i][j]];
+				for(int k=0;k<codeMap[image[i][j]].size();k++){
+					bool code = (codeMap[image[i][j]][k]-'0');
+					out << code;
+				}
 			}
 		}
 		out.close();
@@ -264,6 +268,7 @@ public:
 		}
 	}
 
+	//display encoded images' size
 	void displayEncodedSize(){
 		cout<<"The encoded image has a size of "<<encodedSize<<" bits\n";
 		cout<<"While the original size is: "<<height*breadth*8<<" bits\n";
@@ -321,7 +326,7 @@ public:
 			huffmanTreeComponent *temp = root;
 			while (encodedImage.get(c))
 			{
-				if (c == '0')
+				if (c=='0')
 				{
 					temp = temp->left;
 					if (temp && temp->isLeaf)
@@ -437,7 +442,6 @@ void Application::renderSampleMenu(){
 		renderDecodeMenu();
 	}
 }
-
 
 void Application::renderDefault(){
 	system("cls");
