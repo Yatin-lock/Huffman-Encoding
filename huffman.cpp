@@ -31,6 +31,13 @@ public:
 	}
 };
 
+class compareHuffmanComponent{
+    public:
+    bool operator()(huffmanTreeComponent *a, huffmanTreeComponent *b){
+        return a->prob>b->prob;
+    }
+};
+
 //comparsion function for sorting nodes.
 //It compares according to pixel probability.
 bool cmp(huffmanTreeComponent *a, huffmanTreeComponent *b)
@@ -48,7 +55,7 @@ class huffmanCodingUtils
 	//height - height of image
 	//breadth - breadth of image
 	//nodes - total nodes available.
-	int height, breadth, nodes;
+	int height, breadth;
 
 	//stores the huffmanCodes of all pixel intensities.
 	string codeMap[256];
@@ -72,8 +79,6 @@ public:
 		// initializes pixel intensities to 0.
 		for (int i = 0; i < 256; i++)
 			pixelIntensityMap[i] = 0;
-		// nodes to 0
-		nodes = 0;
 		//codes to 0
 		for (int i = 0; i < 256; i++)
 			codeMap[i] = "";
@@ -151,17 +156,7 @@ public:
 		}
 		return pixelIntensityMap;
 	}
-
-	//initializes no. of nodes using pixelIntensityMap
-	void intializeNodes()
-	{
-		for (int i = 0; i < 256; i++)
-		{
-			if (pixelIntensityMap[i] != 0)
-				nodes++;
-		}
-	}
-
+	
 	// adds all the non zero pixelintensities in an array.
 	void initializeArr()
 	{
@@ -177,7 +172,6 @@ public:
 			}
 		}
 	}
-
 
 	//combines two nodes of the huffman tree.
 	huffmanTreeComponent *combineNodes(huffmanTreeComponent *a, huffmanTreeComponent *b)
@@ -205,6 +199,25 @@ public:
 		return root;
 	}
 
+	// heap optimization 
+	huffmanTreeComponent *createTreeTimeEff()
+	{
+		priority_queue<huffmanTreeComponent* ,vector<huffmanTreeComponent*>, compareHuffmanComponent> q;
+		for(int i=0;i<arr.size();i++){
+			q.push(arr[i]);
+		}
+		while(q.size()>1){
+			huffmanTreeComponent* a = q.top();
+			q.pop();
+			huffmanTreeComponent *b = q.top();
+			q.pop();
+			huffmanTreeComponent *n = combineNodes(a,b);
+			q.push(n);
+		}
+		root = q.top();
+		return  root;
+	}
+
 	// backtracks and assigns code to tree nodes according to their positions
 	void assignCodeToTreeNodes(huffmanTreeComponent *rootNode, string src)
 	{
@@ -213,28 +226,12 @@ public:
 			if (rootNode->isLeaf)
 			{
 				rootNode->code = src;
+				codeMap[rootNode->pixel] = rootNode->code;
 			}
 			else
 			{
 				assignCodeToTreeNodes(rootNode->left, src + '0');
 				assignCodeToTreeNodes(rootNode->right, src + '1');
-			}
-		}
-	}
-
-	//adding huffman codes in codeMap
-	void addInCodeMap(huffmanTreeComponent *rootNode)
-	{
-		if (rootNode)
-		{
-			if (rootNode->isLeaf)
-			{
-				codeMap[rootNode->pixel] = rootNode->code;
-			}
-			else
-			{
-				addInCodeMap(rootNode->left);
-				addInCodeMap(rootNode->right);
 			}
 		}
 	}
@@ -364,6 +361,7 @@ public:
 			cout << "\n";
 		}
 	}
+	
 };
 
 class Application{
@@ -418,9 +416,8 @@ void Application::renderInputMenu(char filename[]){
 	cutil.readImage(filename);
 	int *map = cutil.getMapPixel();
 	cutil.initializeArr();
-	cutil.createTree();
+	cutil.createTreeTimeEff();
 	cutil.assignCodeToTreeNodes(cutil.root,"");
-	cutil.addInCodeMap(cutil.root);
 }
 
 void Application::renderSampleMenu(){
