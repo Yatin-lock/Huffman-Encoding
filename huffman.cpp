@@ -31,6 +31,7 @@ public:
 	}
 };
 
+//compare huffman trees by their probability
 class compareHuffmanComponent{
     public:
     bool operator()(huffmanTreeComponent *a, huffmanTreeComponent *b){
@@ -114,28 +115,37 @@ public:
 		else
 		{
 			fileSeekOffset = 2;
+			//seeking to the beginning of the bmp file
 			fseek(image_file, fileSeekOffset, SEEK_SET);
+			//getting the size of bmp file 
 			fread(&sizeBMP, 4, 1, image_file);
 			fileSeekOffset = 10;
+			//seeking to offset where pixel array is stored
 			fseek(image_file, fileSeekOffset, SEEK_SET);
+			//getting BMP data offset and inserting it
 			fread(&BMPdataOff, 4, 1, image_file);
+			//seeking to the pixel array again
 			fseek(image_file, 18, SEEK_SET);
+			//getting the height and breadth of image
 			fread(&breadth, 4, 1, image_file);
 			fread(&height, 4, 1, image_file);
 			fseek(image_file, 2, SEEK_CUR);
+			//reading no of bits per pixel
 			fread(&bpp, 2, 1, image_file);
+
 			fseek(image_file, BMPdataOff, SEEK_SET);
+			// dynamically allocating image space for insertion
 			image = new int *[height];
 			for (i = 0; i < height; i++)
 			{
 				image[i] = new int[breadth];
 			}
-			int numberOfBytes = (sizeBMP - BMPdataOff) / 3;
 			for (i = 0; i < height; i++)
 			{
 				for (j = 0; j < breadth; j++)
 				{
 					fread(&temp, 3, 1, image_file);
+					// taking and with hexadecimal FF -> (16^1+16^0)
 					temp = temp & 0x0000FF;
 					image[i][j] = temp;
 				}
@@ -270,6 +280,7 @@ public:
 		cout<<"The encoded image has a size of "<<encodedSize<<" bits\n";
 		cout<<"While the original size is: "<<height*breadth*8<<" bits\n";
 	}
+
 };
 
 // utils for decoding the image.
